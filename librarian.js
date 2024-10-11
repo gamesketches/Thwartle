@@ -1,9 +1,9 @@
 'use strict'
 
+const fs = require('fs');
+
 var moveChecker = {};
 var words = [];
-
-words.push("SALET", "BALET", "PARTY");
 
 function FindWordsForGreenLetters(currentGreenLetters){
     return words.filter((word) => {
@@ -43,8 +43,18 @@ moveChecker.wordsRemaining = function(word, ruleObject) {
     return filteredForYellow.length > 0;
 }
 
-moveChecker.words = words;
+moveChecker.initialize = function() {
+
+    fs.readFile('staticFiles/wordlist.csv', 'utf8', (err, data) => {
+        if(err) {
+            console.error(err);
+            return;
+        }
+        words = data.split('\n');
+        console.log(words.length);
+    });
 
 console.log("MoveChecker initialized");
+}
 
 module.exports = moveChecker;

@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const port = 3000
 
-var moveChecker = require('./wordlist')
+var moveChecker = require('./librarian')
 
 function InterpretParams(params) {
     console.log("In the func");
@@ -20,6 +20,7 @@ app.post('/', (req, res) => {
 })
 
 app.listen(port, () => {
+    moveChecker.initialize();
     console.log('App listenin');
     console.log(moveChecker.WordExists("SALET"));
 })
