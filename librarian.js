@@ -19,12 +19,15 @@ moveChecker.FindWordsForGreenLetters = function(currentGreenLetters){
 moveChecker.FindWordsForYellowLetters = function(currentFilteredList, currentYellowLetters) {
     return currentFilteredList.filter((word) => {
         // TODO probably will need to make this handle double letters
-        for(var i = 0; i < currentYellowLetters.length; i++) {
-            var letter = currentYellowLetters[i];
-            if(letter === "_") continue;
-            var firstAppearance = word.indexOf(letter);
-            if(firstAppearance < 0) return false;
-            if(firstAppearance == i && word.lastIndexOf(letter) == i) return false; 
+        for(let i = 0; i < word.length; i++) {
+            if(currentYellowLetters.hasOwnProperty(word[i])) {
+                const letter = word[i];
+                if(currentYellowLetters[letter].indexOf(i) > -1) return false;     
+            } 
+        }
+        const keys = Object.keys(currentYellowLetters);
+        for(let i = 0; i < keys.length; i++) {
+            if(!word.includes(keys[i])) { console.log("doesnt have a " + keys[i]); return false}
         }
         return true;
     });
