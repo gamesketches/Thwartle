@@ -5,7 +5,7 @@ const fs = require('fs');
 var moveChecker = {};
 var words = [];
 
-function FindWordsForGreenLetters(currentGreenLetters){
+moveChecker.FindWordsForGreenLetters = function(currentGreenLetters){
     return words.filter((word) => {
         for(var i = 0; i < currentGreenLetters.length; i++) {
             if(currentGreenLetters[i] !== "_" && currentGreenLetters[i] !== word[i]) {
@@ -16,7 +16,7 @@ function FindWordsForGreenLetters(currentGreenLetters){
     });
 }
 
-function FindWordsForYellowLetters(currentFilteredList, currentYellowLetters) {
+moveChecker.FindWordsForYellowLetters = function(currentFilteredList, currentYellowLetters) {
     return currentFilteredList.filter((word) => {
         // TODO probably will need to make this handle double letters
         for(var i = 0; i < currentYellowLetters.length; i++) {
@@ -31,8 +31,10 @@ function FindWordsForYellowLetters(currentFilteredList, currentYellowLetters) {
 }
 
 moveChecker.WordExists = function(word) {
+    if("SALET".includes(word)) console.log("its definitely salet");
     for(var i = 0; i < words.length; i++) {
-        if(words[i] == word) return true;
+
+        if(words[i].includes(word)) return true;
     }
     return false;
 }
