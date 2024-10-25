@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const path = require('path');
 const port = 3000
 
 var moveChecker = require('./librarian')
@@ -52,8 +53,13 @@ function DetermineWordValidity(paramsObj) {
 
 //------------------------------------------------------
 // Server listener stuff
+
+app.set("views", path.join(__dirname, "staticFiles"));
+app.use(express.static(path.join(__dirname, "staticFiles")));
+
 app.get('/', (req, res) => {
-    res.send(InterpretParams(req.query));
+    res.sendFile(path.join(__dirname, "staticFiles/index.html"));
+    //res.send(InterpretParams(req.query));
 })
 
 app.get('/validWord', (req, res) => {

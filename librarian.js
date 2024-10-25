@@ -34,7 +34,6 @@ moveChecker.FindWordsForYellowLetters = function(currentFilteredList, currentYel
 }
 
 moveChecker.WordExists = function(word) {
-    if("SALET".includes(word)) console.log("its definitely salet");
     for(var i = 0; i < words.length; i++) {
 
         if(words[i].includes(word)) return true;
