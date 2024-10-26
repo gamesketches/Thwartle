@@ -53,6 +53,7 @@ function InterpretParams() {
         yellowLetterInfo = InterpretYellowLetters(params.yellowLetters);
     } else {
         params = {greenLetters: "00000"};
+        yellowLetterInfo = {};
     }
 }
  
@@ -138,6 +139,7 @@ function GetWordsForGreenLetters(currentGreenLetters){
 }
 
 function GetWordsForYellowLetters(currentFilteredList, currentYellowLetters) {
+    console.log(currentYellowLetters);
     return currentFilteredList.filter((word) => {
         // TODO probably will need to make this handle double letters
         for(let i = 0; i < word.length; i++) {
@@ -168,7 +170,7 @@ function CheckHighlight() {
     if(remainingYellowLetterWords.length > 1) {
         helperText.innerText = "Good choice! Copy to clipboard to send it along";
         let submitButton = document.getElementById("submit-button");
-        submitButton.onclick = CopyURLToClipboard();
+        submitButton.onclick = CopyURLToClipboard;
         submitButton.innerText = "Copy";
     } else helperText.innerText = "No words possible with that highlight, please pick a different one";
 }
@@ -309,3 +311,5 @@ function InitBoard() {
 }
 
 InitBoard();
+
+console.log(location.host);
