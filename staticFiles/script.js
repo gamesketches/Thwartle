@@ -17,6 +17,18 @@ function UpdateCurrentLetterHighlight() {
     if(nextLetter < 5) letterBoxes.children[nextLetter].classList.add("current-letter");
 }
 
+function ClearEnteredHighlights() {
+    const letterBoxes = document.getElementById("current-word");
+    for(let i = 0; i < letterBoxes.children.length; i++) {
+        const letterBox = letterBoxes.children[i];
+        if((letterBox.classList.contains("green-letter") || letterBox.classList.contains("yellow-letter"))
+                            && params.greenLetters[i] != 1) {
+            letterBox.classList.remove("green-letter");
+            letterBox.classList.remove("yellow-letter");
+        }
+    }
+}
+
 function InsertCharInString(targetString, targetCharacter, index) {
      return targetString.substring(0, index) + targetCharacter + targetString.substring(index + 1);
  }
@@ -56,8 +68,39 @@ function FillInPreviousWord() {
     }
 }
 
-function CheckWord() {
+function GameEndingWord() {
+    const letterBoxes = document.getElementById("current-word");
+    let baseGreenString = "_____";
+    for(let i = 0; i < letterBoxes.children.length; i++) {
+        if(letterBoxes.children[i].classList.contains("green-letter")) {
+            baseGreenString = InsertCharInString(baseGreenString, letterBoxes.children[i].innerText, i);
+        }
+    }
 
+    for(let i = 0; i < letterBoxes.children.length; i++) {
+        const letter = letterBoxes.children[i].innerText;
+        let filteredWordList;
+        let potentialGreen = baseGreenString;
+        if(!letterBoxes.children[i].classList.contains("green-letter")) {
+            potentialGreen = InsertCharInString(baseGreenString, letter, i);
+        } 
+        filteredWordList = GetWordsForGreenLetters(potentialGreen);
+        if(filteredWordList.length > 1) return false;
+        if(!letterBoxes.children[i].classList.contains("yellow-letter")) {
+            let potentialYellow = structuredClone(yellowLetterInfo);
+            if(potentialYellow.hasOwnProperty(letter) && potential[letter].indexOf(i) == -1) {
+                potentialYellow[letter].push(i);
+            }
+            filteredWordList = GetWordsForYellowLetters(filteredWordList, potentialYellow);
+            console.log(filteredWordList);
+            if(filteredWordList.length > 1) return false;
+        }
+    }   
+    return true;
+}
+
+
+function CheckWord() {
     const helperText = document.getElementById("guide-text");
     if(nextLetter < 5) {
         helperText.innerText = "Not enough letters";
@@ -69,8 +112,13 @@ function CheckWord() {
     
     for(var i = 0; i < wordlist.length; i++) {
            if(wordlist[i].includes(enteredWord)) {
-               helperText.innerText = "valid!! Select a letter to green";//return true;
-               gameState = "highlight-entry";
+               if(GameEndingWord()) {
+                   helperText.innerText = "You win!!";
+               }
+               else {
+                   helperText.innerText = "valid!! Select a letter to green";
+                   gameState = "highlight-entry";
+               }
                return;
            }
     }   
@@ -127,15 +175,27 @@ function CheckHighlight() {
 
 function CopyURLToClipboard() {
     let greenHighlightString = "00000";
+    let yellowString = "";
+    for(let key in yellowLetterInfo) {
+        const indexArray = yellowLetterInfo[key];
+        for(let i = 0; i < indexArray.length; i++) {
+            yellowString += key + i;
+        }
+    }
     const letterBoxes = document.getElementById("current-word");
     for(let i = 0; i < letterBoxes.children.length; i++) {
-         if(letterBoxes.children[i].classList.contains("green-letter")) {
+         const letterBox = letterBoxes.children[i];
+         if(letterBox.classList.contains("green-letter")) {
              greenHighlightString = InsertCharInString(greenHighlightString, 1, i);
+         } else if(letterBox.classList.contains("yellow-letter") && !yellowString.includes(letterBox.innerText + i) ) {
+            yellowString += letterBox.innerText + i; 
+             console.log("adding string " + letterBox.innerText + i);
          }
-     }
+    }
+    
     const lastWordString = "?lastWord=" + enteredWord;
     const greenLetterString = "&greenLetters=" + greenHighlightString;
-    const yellowLetterString = "&yellowLetters=";
+    const yellowLetterString = "&yellowLetters=" + yellowString;
     const urlString = serverURL + lastWordString + greenLetterString + yellowLetterString;
     navigator.clipboard.writeText(urlString);
 }
@@ -236,6 +296,7 @@ function InitBoard() {
                 target.classList.remove("yellow-letter");
             }
             else {
+                ClearEnteredHighlights(); 
                 target.classList.add("green-letter");
             }
             CheckHighlight();
