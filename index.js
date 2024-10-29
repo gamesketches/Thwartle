@@ -1,9 +1,16 @@
 const express = require('express')
 const app = express()
 const path = require('path');
-const port = 3000
+const port = 3000;
+const fs = require('fs');
+
+const https = require('https');
 
 var moveChecker = require('./librarian')
+
+const sslKey = fs.readFileSync('./cert/key-rsa.pem');
+
+const sslCert = fs.readFileSync('./cert/cert.pem');
 
 function InsertCharInString(targetString, targetCharacter, index) {
     return targetString.substring(0, index) + targetCharacter + targetString.substring(index + 1);
@@ -54,13 +61,7 @@ function DetermineWordValidity(paramsObj) {
 //------------------------------------------------------
 // Server listener stuff
 
-app.set("views", path.join(__dirname, "staticFiles"));
-app.use(express.static(path.join(__dirname, "staticFiles")));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "staticFiles/index.html"));
-    //res.send(InterpretParams(req.query));
-})
 
 app.get('/validWord', (req, res) => {
     console.log(req.query);
@@ -71,8 +72,18 @@ app.post('/', (req, res) => {
     res.send('Got a POST request')
 })
 
+
+//const server = https.createServer({key:sslKey, sslCert}, app).listen(port, () => {console.log("listening");});
+
 app.listen(port, () => {
     moveChecker.initialize();
     console.log('App listenin');
-    //console.log(moveChecker.WordExists("SALET"));
+})
+
+app.set("views", path.join(__dirname, "staticFiles"));
+app.use(express.static(path.join(__dirname, "staticFiles")));
+
+app.get('/', (req, res) => {
+    console.log("get request received");
+    res.sendFile(path.join(__dirname, "staticFiles/index.html"));
 })
