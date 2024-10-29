@@ -7,6 +7,7 @@ let enteredWord = "";
 let gameState = "word-entry";
 
 const currentGreenLetter = [];
+let greenLetterLog = [];
 var params, yellowLetterInfo;
 
 // UTILITIES -------------
@@ -38,7 +39,6 @@ function GetWordsForGreenLetters(currentGreenLetters){
     return wordlist.filter((word) => {
         for(var i = 0; i < currentGreenLetters.length; i++) {
             if(currentGreenLetters[i] !== "_" && currentGreenLetters[i] !== word[i].toUpperCase()) {
-               // console.log("throwing out " + word[i] + " because " + currentGreenLetters[i] + " is not " + word[i]);
                 return false;
             }
         }
@@ -65,7 +65,11 @@ function GetWordsForYellowLetters(currentFilteredList, currentYellowLetters) {
 }
 
 function IsPrefilledLetter(index) {
-    return params.lastWord != null && params.greenLetters[index] == 1;
+    return params.wordsEntered != null && params.greenLetters[index] == 1;
+}
+
+function WordPreviouslyEntered(newWord) {
+    return params.enteredWords.includes(newWord);
 }
 
 function CopyURLToClipboard() {
@@ -88,10 +92,13 @@ function CopyURLToClipboard() {
          }
     }
     
-    const lastWordString = "?lastWord=" + enteredWord;
-    const greenLetterString = "&greenLetters=" + greenHighlightString;
+    let greenLetterString = "&greenLetters=";
+    greenLetterLog.forEach((element) => greenLetterString += "," + element);
+    greenLetterString += "," + greenHighlightString;
+
+    const enteredWordString = "?enteredWords=" + params.enteredWords + "," + enteredWord;
     const yellowLetterString = "&yellowLetters=" + yellowString;
-    const urlString = serverURL + lastWordString + greenLetterString + yellowLetterString;
+    const urlString = serverURL + enteredWordString + greenLetterString + yellowLetterString;
     navigator.clipboard.writeText(urlString);
 }
 
@@ -112,7 +119,12 @@ function InterpretParams() {
     params = new Proxy(new URLSearchParams(window.location.search), {
   get: (searchParams, prop) => searchParams.get(prop),
 });
-    if(params.lastWord != null) {
+    if(params.enteredWords != null) {
+        params.enteredWords = params.enteredWords.split(",");
+        params.lastWord = params.enteredWords[params.enteredWords.length - 1];
+        greenLetterLog = params.greenLetters.split(",");
+        if(greenLetterLog.length > 0) params.greenLetters = greenLetterLog[greenLetterLog.length - 1];
+        else params.greenLetters = "00000";
         yellowLetterInfo = InterpretYellowLetters(params.yellowLetters);
     } else {
         params = {greenLetters: "00000"};
@@ -121,14 +133,21 @@ function InterpretParams() {
 }
  
 function FillInPreviousWord() {
-    if(params.lastWord == null) return;
-    let board = document.getElementById("previous-word");
-    for (let i = 0; i < 5; i++) {
-        let box = document.createElement("div");
-        box.className = "letter-box";
-        if(params.lastWord != null) box.textContent = params.lastWord[i];
-        if(params.greenLetters[i] == 1) box.classList.add("green-letter");
-        board.appendChild(box);
+    if(params.enteredWords == null) return;
+    const board = document.getElementById("previous-words");
+    const previousWords = params.enteredWords.split(",");
+    for(let k = 0; k < previousWords.length; k++) {
+        const previousWord = previousWords[k];
+        const newRow = document.createElement("div");
+        newRow.className = "previous-word";
+        board.appendChild(newRow);
+        for (let i = 0; i < 5; i++) {
+            let box = document.createElement("div");
+            box.className = "letter-box";
+            box.textContent = previousWord[i];
+            if(greenLetterLog[k][i] == 1) box.classList.add("green-letter");
+            newRow.appendChild(box);
+        }
     }
 }
 
