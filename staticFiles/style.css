@@ -37,6 +37,11 @@
     background-color: yellow;
 }
 
+.red-letter {
+    border: 2px solid ;
+    background-color: red;
+}
+
 #keyboard-cont {
     margin: 1rem 0;
     display: flex;
