@@ -1,5 +1,5 @@
 import {wordlist} from "./wordlist.js";
-const serverURL = "https://5c17-2600-4041-580a-b00-5532-ba82-64c1-59fd.ngrok-free.app";
+const serverURL = "https://92e5-2600-4041-580a-b00-8586-6e2-8923-3865.ngrok-free.app";
 let nextLetter = 0;
 const wordSize = 5;
 let enteredWord = "";
@@ -103,6 +103,7 @@ function PruneWordList() {
         for(var i = 0; i < previousWords.length; i++) {
             const previousWord = previousWords[i].toLowerCase();
             const wordColorLog = letterColorLog[i];
+            if(word === previousWord) return false;
             for(let k = 0; k < wordColorLog.length; k++) {
                 switch(wordColorLog[k]) {
                     case "R":
@@ -234,6 +235,7 @@ function GameEndingWord() {
             potentialGreen = InsertCharInString(baseGreenString, letter, i);
         } 
         filteredWordList = GetWordsForGreenLetters(potentialGreen);
+        console.log(filteredWordList);
         if(filteredWordList.length > 1) return false;
         if(!letterBoxes.children[i].classList.contains("yellow-letter")) {
             let potentialYellow = structuredClone(yellowLetterInfo);
@@ -270,13 +272,13 @@ function CheckWord() {
                    helperText.innerText = "You win!!";
                }
                else {
-                   helperText.innerText = "valid!! Select a letter to green";
+                   helperText.innerText = "Valid!! Tap letters to change their color";
                    gameState = "highlight-entry";
                }
                return;
            }
     }   
-    helperText.innerText = "invalid word";
+    helperText.innerText = "That word is Invalid";
 }
 
 function CheckHighlight() {
