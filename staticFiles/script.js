@@ -64,7 +64,7 @@ function GetWordsForYellowLetters(targetWordList) {
             targetWordList = targetWordList.filter((word) => {
                 // TODO probably will need to make this handle double letters
                 for(let i = 0; i < word.length; i++) {
-                    if(word[i] === theLetter) {
+                    if(word[i].toUpperCase() === theLetter) {
                          if(i === j) return false;
                          else return true;
                     }
