@@ -1,5 +1,5 @@
 import {wordlist} from "./wordlist.js";
-const serverURL = "https://92e5-2600-4041-580a-b00-8586-6e2-8923-3865.ngrok-free.app";
+const serverURL = "localhost:3000";//"https://92e5-2600-4041-580a-b00-8586-6e2-8923-3865.ngrok-free.app";
 let nextLetter = 0;
 const wordSize = 5;
 let enteredWord = "";
@@ -8,6 +8,7 @@ let gameState = "word-entry";
 
 const currentGreenLetter = ["0", "0", "0", "0", "0"];
 let letterColorLog = [];
+const bannedLetters = [];
 var params, yellowLetterInfo, previousWords, currentWordList;
 
 // UTILITIES -------------
@@ -44,8 +45,8 @@ function ClearEnteredHighlights() {
     }
 }
 
-function GetWordsForGreenLetters(currentGreenLetters){
-    return currentWordList.filter((word) => {
+function GetWordsForGreenLetters(currentGreenLetters, targetWordList){
+    return targetWordList.filter((word) => {
         for(var i = 0; i < currentGreenLetters.length; i++) {
             if(currentGreenLetters[i] !== "_" && currentGreenLetters[i] !== word[i].toUpperCase()) {
                 return false;
@@ -55,12 +56,12 @@ function GetWordsForGreenLetters(currentGreenLetters){
     });
 }
 
-function GetWordsForYellowLetters(currentFilteredList) {
+function GetWordsForYellowLetters(targetWordList) {
     const letterBoxes = document.getElementById("current-word");
     for(let j = 0; j < letterBoxes.children.length; j++) {
         if(letterBoxes.children[j].classList.contains("yellow-letter")) {
             const theLetter = letterBoxes.children[j].innerText;
-            currentFilteredList = currentFilteredList.filter((word) => {
+            targetWordList = targetWordList.filter((word) => {
                 // TODO probably will need to make this handle double letters
                 for(let i = 0; i < word.length; i++) {
                     if(word[i] === theLetter) {
@@ -72,7 +73,22 @@ function GetWordsForYellowLetters(currentFilteredList) {
             });
         }
     }
-    return currentFilteredList;
+    return targetWordList;
+}
+
+function GetWordsForPotentialYellow(targetWordList, letter, index) {
+    return targetWordList.filter((word) => {
+        return word.toUpperCase().includes(letter) && word[index] !== letter;
+    });
+}
+
+function GetWordsForBannedLetter(bannedLetter, targetWordList) {
+    return targetWordList.filter((word) => {
+        if(word.toUpperCase().includes(bannedLetter)) {
+            return false;
+        }
+        return true;
+    });
 }
 
 function GetWordsForRedLetters(currentFilteredList) {
@@ -99,6 +115,23 @@ function WordPreviouslyEntered(newWord) {
 }
 
 function PruneWordList() {
+    const approvedLetters = [];
+    for(var i = 0; i < previousWords.length; i++) {
+        const previousWord = previousWords[i];
+        const wordColorLog = letterColorLog[i];
+        // Figure out the approved letters first, then move on to the banned letters
+        for(var k = 0; k < wordColorLog.length; k++) {
+            if(wordColorLog[k] == "G" || wordColorLog[k] == "Y") approvedLetters.push(previousWord[k]);
+        }
+        // Doing this as a second loop to avoid a situation where a double letter has a late yellow
+        for(var k = 0; k < previousWord.length; k++) {
+            if(approvedLetters.indexOf(previousWord[k]) == -1 && 
+                    bannedLetters.indexOf(previousWord[k]) == -1) {
+                bannedLetters.push(previousWord[k]);
+            }
+        }
+    }
+
     currentWordList = wordlist.filter((word) => {
         for(var i = 0; i < previousWords.length; i++) {
             const previousWord = previousWords[i].toLowerCase();
@@ -106,9 +139,9 @@ function PruneWordList() {
             if(word === previousWord) return false;
             for(let k = 0; k < wordColorLog.length; k++) {
                 switch(wordColorLog[k]) {
-                    case "R":
-                        if(word.toLowerCase().includes(previousWord[k])) return false;
-                        break;
+                    //case "R":
+                     //   if(word.toLowerCase().includes(previousWord[k])) return false;
+                      //  break;
                     case "G":
                         if(word[k] !== previousWord[k]) return false;
                         break;
@@ -119,6 +152,7 @@ function PruneWordList() {
                 }
             }
         }
+        for(let k = 0; k < bannedLetters.length; k++) if(word.includes(bannedLetters[k])) return false;
         return true;
     });
 }
@@ -140,17 +174,15 @@ function CopyURLToClipboard() {
 
     }
     
-    //let greenLetterString = "&greenLetters=";
     let colorLogString = "&colorLog=";
-    //letterColorLog.forEach((element) => greenLetterString += "," + element);
     letterColorLog.forEach((element) => colorLogString += element + ",");
     colorLogString += letterColorString;
 
     let enteredWordString = "?enteredWords=";
     previousWords.forEach((element) => enteredWordString += element + ",");  
     enteredWordString += enteredWord;
-    //const yellowLetterString = "&yellowLetters=" + yellowString;
-    const urlString = serverURL + enteredWordString + colorLogString;//+ greenLetterString + yellowLetterString;
+    console.log(enteredWord);
+    const urlString = serverURL + enteredWordString + colorLogString;
     navigator.clipboard.writeText(urlString);
 }
 
@@ -173,7 +205,6 @@ function InterpretParams() {
 });
     if(params.enteredWords != null) {
         previousWords = params.enteredWords.split(",");
-        console.log(params.enteredWords.split(","));
         params.lastWord = previousWords[previousWords.length - 1];
         letterColorLog = params.colorLog.split(",");
         if(letterColorLog.length > 0) params.greenLetters = GreenLettersFromColorLogString(letterColorLog[letterColorLog.length - 1]);
@@ -221,33 +252,42 @@ function FillInPreviousWord() {
 function GameEndingWord() {
     const letterBoxes = document.getElementById("current-word");
     let baseGreenString = "_____";
+    let newWordList = structuredClone(currentWordList);
     for(let i = 0; i < letterBoxes.children.length; i++) {
         if(letterBoxes.children[i].classList.contains("green-letter")) {
             baseGreenString = InsertCharInString(baseGreenString, letterBoxes.children[i].innerText, i);
         }
     }
+    console.log(newWordList);
 
     for(let i = 0; i < letterBoxes.children.length; i++) {
         const letter = letterBoxes.children[i].innerText;
         let filteredWordList;
         let potentialGreen = baseGreenString;
+        // Need to figure out potential banned letters for filtering, can be done as we check green letters
+        let banLetterInFutureChecks = false;
         if(!letterBoxes.children[i].classList.contains("green-letter")) {
             potentialGreen = InsertCharInString(baseGreenString, letter, i);
+            banLetterInFutureChecks = true;
+
         } 
-        filteredWordList = GetWordsForGreenLetters(potentialGreen);
-        console.log(filteredWordList);
+        filteredWordList = GetWordsForGreenLetters(potentialGreen, newWordList);
         if(filteredWordList.length > 1) return false;
         if(!letterBoxes.children[i].classList.contains("yellow-letter")) {
-            let potentialYellow = structuredClone(yellowLetterInfo);
-            if(potentialYellow.hasOwnProperty(letter) && potential[letter].indexOf(i) == -1) {
-                potentialYellow[letter].push(i);
-            }
-            filteredWordList = GetWordsForYellowLetters(filteredWordList, potentialYellow);
+            //let potentialYellow = structuredClone(yellowLetterInfo);
+            //if(potentialYellow.hasOwnProperty(letter) && potential[letter].indexOf(i) == -1) {
+            //    potentialYellow[letter].push(i);
+            //}
+            filteredWordList = GetWordsForPotentialYellow(newWordList, letter, i);
             console.log(filteredWordList);
             if(filteredWordList.length > 1) return false;
         }
+        // Need to figure out how to select new letters to remove
+        if(banLetterInFutureChecks) newWordList = GetWordsForBannedLetter(letter, newWordList);
     }   
-    return true;
+    console.log(newWordList);
+    return newWordList.length == 0; 
+    //return true;
 }
 
 
@@ -264,6 +304,12 @@ function CheckWord() {
             }
         });
         if(previouslyUsedWord) return;
+        for(var i = 0; i < bannedLetters.length; i++) {
+            if(enteredWord.includes(bannedLetters[i])) {
+                helperText.innerText = "You can't use letters that have already been used!";
+                return false;
+            }
+        }
     }
     
     for(var i = 0; i < currentWordList.length; i++) {
@@ -290,10 +336,10 @@ function CheckHighlight() {
              greenHighlightString = InsertCharInString(greenHighlightString, letterBoxes.children[i].innerText, i);
          }
      }
-    const remainingGreenLetterWords = GetWordsForGreenLetters(greenHighlightString);
+    const remainingGreenLetterWords = GetWordsForGreenLetters(greenHighlightString, currentWordList);
     const remainingYellowLetterWords = GetWordsForYellowLetters(remainingGreenLetterWords);
-    const remainingRedLetterWords = GetWordsForRedLetters(remainingYellowLetterWords);
-    if(remainingRedLetterWords.length > 1) {
+    //const remainingRedLetterWords = GetWordsForRedLetters(remainingYellowLetterWords);
+    if(remainingYellowLetterWords.length > 1) {
         helperText.innerText = "Good choice! Copy to clipboard to send it along";
         let submitButton = document.getElementById("submit-button");
         submitButton.onclick = CopyURLToClipboard;
@@ -339,15 +385,14 @@ function InitBoard() {
     FillInPreviousWord();
     let board = document.getElementById("current-word");
 
-    console.log(currentGreenLetter);
     let foundStartingCursor = false;
     for (let i = 0; i < 5; i++) {
         let box = document.createElement("div");
         box.className = "letter-box";
         if(IsPrefilledLetter(i)) {
-            console.log(currentGreenLetter[i]);
             box.textContent = currentGreenLetter[i];
             box.classList.add("green-letter");
+            if(!foundStartingCursor) enteredWord += currentGreenLetter[i];
         } else if(!foundStartingCursor) {
             nextLetter = i;
             foundStartingCursor = true;
@@ -377,6 +422,12 @@ function InitBoard() {
 
         board.appendChild(box);
     }
+    const keyboardButtons = document.getElementsByClassName("keyboard-button");
+    for(let i = 0; i < keyboardButtons.length; i++) {
+        const button = keyboardButtons[i];
+        if(bannedLetters.indexOf(button.innerText.toLowerCase()) > -1) button.classList.add("disabled-key");
+    }
+
     document.getElementById("submit-button").onclick = CheckWord
     UpdateCurrentLetterHighlight();
 }
@@ -410,6 +461,7 @@ document.getElementById("keyboard-cont").addEventListener("click", (e) => {
 
     let key = target.textContent;
 
+    if(key.length == 1 && bannedLetters.indexOf(key) > -1) return;
     if(key === "Del") {
         key = "Backspace";
     }

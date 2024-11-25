@@ -73,6 +73,10 @@ body {
     text-transform: uppercase;
 }
 
+.disabled-key {
+    color: grey;
+}
+
 .submit-button {
     font-size: 3vw;
     font-weight: 700;
