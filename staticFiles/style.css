@@ -85,6 +85,14 @@ body {
     cursor: pointer;
 }
 
+.surrender-button {
+    font-size: 3vw;
+    font-weight: 700;
+    padding: 1vw;
+    margin 0 4vw;
+    cursor: pointer;
+}
+
 #guide-text {
     color: white;
 }

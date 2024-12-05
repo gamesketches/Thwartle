@@ -1,5 +1,5 @@
 import {wordlist} from "./wordlist.js";
-const serverURL = "localhost:3000";//"https://92e5-2600-4041-580a-b00-8586-6e2-8923-3865.ngrok-free.app";
+const serverURL = "http://localhost:3000";
 let nextLetter = 0;
 const wordSize = 5;
 let enteredWord = "";
@@ -155,6 +155,7 @@ function PruneWordList() {
         for(let k = 0; k < bannedLetters.length; k++) if(word.includes(bannedLetters[k])) return false;
         return true;
     });
+    console.log(currentWordList);
 }
 
 function CopyURLToClipboard() {
@@ -215,6 +216,8 @@ function InterpretParams() {
         previousWords = [];
         currentWordList = wordlist;
         params = {greenLetters: "00000", enteredWords: []};
+        const surrenderButton = document.getElementById("surrender-button");
+        surrenderButton.remove();
     }
 }
  
@@ -327,6 +330,19 @@ function CheckWord() {
     helperText.innerText = "That word is Invalid";
 }
 
+function Surrender() {
+    const submitButton = document.getElementById("submit-button");
+    submitButton.remove();
+    const surrenderButton = document.getElementById("surrender-button");
+    surrenderButton.innerText = "New Game";
+    surrenderButton.onclick = () => {window.location.href = serverURL;};
+    let wordString;
+    currentWordList.forEach((word) => {wordString += word + ",";});
+    wordString = wordString.substring(0, wordString.length -1);
+    const helperText = document.getElementById("guide-text");
+    helperText.innerText = "That was a tough one, some possible answers: " + currentWordList;
+}
+
 function CheckHighlight() {
     const helperText = document.getElementById("guide-text");
     let greenHighlightString = "_____";
@@ -408,10 +424,6 @@ function InitBoard() {
             }
             else if(target.classList.contains("green-letter")) {
                 target.classList.remove("green-letter");
-                target.classList.add("red-letter");
-            }
-            else if(target.classList.contains("red-letter")) {
-                target.classList.remove("red-letter");
             }
             else {
                 ClearEnteredHighlights(); 
@@ -428,7 +440,8 @@ function InitBoard() {
         if(bannedLetters.indexOf(button.innerText.toLowerCase()) > -1) button.classList.add("disabled-key");
     }
 
-    document.getElementById("submit-button").onclick = CheckWord
+    document.getElementById("submit-button").onclick = CheckWord;
+    document.getElementById("surrender-button").onclick = Surrender;
     UpdateCurrentLetterHighlight();
 }
 
